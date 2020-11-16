@@ -58,7 +58,7 @@ def main():
         file_name = sys.argv[1]
         #file_name = "test.gif"
     except Exception as e:
-        print("Usage: python gcp.py <gif_file_name>")
+        print('Usage: python gcp.py <gif-file-name>')
         exit()
 
     try:
@@ -72,16 +72,16 @@ def main():
                       'å', 'k', '9', '8', 'Ä', 'Ü', 'Ö', 'N', 'W', 'M']
         char_matrixes = []
 
-        for i in range(0, count):
+        for i in range(count):
             # convert to gray mode
-            frames[i] = frames[i].convert("L")
+            frames[i] = frames[i].convert('L')
 
             # resize it
             frames[i] = frames[i].resize((140, 80))
 
             # to char matrix
             frame_matrix = frames[i].load()
-            char_matrix = [[0 for i in range(80)] for j in range(140)]
+            char_matrix = [[0 for _ in range(80)] for _ in range(140)]
             for j in range(140):
                 for k in range(80):
                     point = frame_matrix[j, k]
