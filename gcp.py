@@ -79,19 +79,25 @@ def main():
     )
     args = parser.parse_args()
 
-    filename = args.filename
     verbose = args.verbose
+    char_array_size = args.size
+    filename = args.filename
     
     try:
         # load image
         image = Image.open(filename)
+        if verbose:
+            print('file %s loaded' % filename)
 
         # get frames
         frames = get_frames(image)
+        if verbose:
+            print('%d frames get' % len(frames))
 
-        char_array = [' ', ':', '-', '?', 'l', 'J',
-                      'å', 'k', '9', '8', 'Ä', 'Ü', 'Ö', 'N', 'W', 'M']
-        char_matrixes = []
+        # load char array
+        char_array = get_char_array(char_array_size)
+        if verbose:
+            print('char array with size %d loaded' % char_array_size)
 
         # frame to char matrix
         for frame in frames:
@@ -124,7 +130,10 @@ def main():
                 time.sleep(0.1)
 
     except Exception as e:
-        print(e.with_traceback())
+        if verbose:
+            print(e.with_traceback())
+        else:
+            print(e)
         exit()
 
 
