@@ -73,6 +73,12 @@ def main():
         help='show verbose log when running',
     )
     parser.add_argument(
+        '-s', '--size', 
+        type=int,
+        help='char array size, only support 16 now',
+        default=16,
+    )
+    parser.add_argument(
         'filename', 
         type=str, 
         help='gif filename',
