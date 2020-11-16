@@ -4,6 +4,10 @@ import time
 import argparse
 
 
+char_array_dict = {
+    16: [' ', ':', '-', '?', 'l', 'J', 'å', 'k', '9', '8', 'Ä', 'Ü', 'Ö', 'N', 'W', 'M'],
+}
+
 def analyseImage(image):
     results = {
         'size': image.size,
@@ -50,6 +54,11 @@ def get_frames(image):
         pass
     return frames
 
+
+def get_char_array(char_array_size):
+    if char_array_size not in char_array_dict.keys():
+        raise RuntimeError('%d size of char array not support' % char_array_size)
+    return char_array_dict[char_array_size]
 
 def main():
     parser = argparse.ArgumentParser()
