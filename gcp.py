@@ -1,6 +1,7 @@
 from PIL import Image
 import sys
 import time
+import os
 import argparse
 
 
@@ -61,6 +62,10 @@ def get_char_array(char_array_size):
     return char_array_dict[char_array_size]
 
 def main():
+    # get terminal window size
+    terminal_rows, terminal_cols = os.popen('stty size', 'r').read().split()
+
+    # parse args
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-v', '--verbose', 
