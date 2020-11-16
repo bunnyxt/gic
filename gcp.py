@@ -82,6 +82,10 @@ def main():
     verbose = args.verbose
     char_array_size = args.size
     filename = args.filename
+
+    # display_rows and display_cols
+    display_rows = 80
+    display_cols = 140
     
     try:
         # load image
@@ -100,19 +104,20 @@ def main():
             print('char array with size %d loaded' % char_array_size)
 
         # frame to char matrix
+        char_matrixes = []
         for frame in frames:
             # convert to gray mode
             frame = frame.convert('L')
 
             # resize it
-            frame = frame.resize((140, 80))
+            frame = frame.resize((display_cols, display_rows))
             # frame.show()
 
             # to char matrix
             frame_matrix = frame.load()
-            char_matrix = [[0 for _ in range(80)] for _ in range(140)]
-            for j in range(140):
-                for k in range(80):
+            char_matrix = [[0 for _ in range(display_rows)] for _ in range(display_cols)]
+            for j in range(display_cols):
+                for k in range(display_rows):
                     point = frame_matrix[j, k]
                     level = int(point / 16)
                     char_matrix[j][k] = level
@@ -120,10 +125,11 @@ def main():
 
         image.close()
 
+        # display loop
         while True:
             for char_matrix in char_matrixes:
-                for i in range(80):
-                    for j in range(140):
+                for i in range(display_rows):
+                    for j in range(display_cols):
                         level = char_matrix[j][i]
                         print(char_array[level], end='')
                     print('')
