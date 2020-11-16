@@ -25,7 +25,6 @@ def analyseImage(image):
 
 def get_frames(image):
     mode = analyseImage(image)['mode']
-    count = 0
     p = image.getpalette()
     last_frame = image.convert('RGBA')
     frames = []
@@ -44,12 +43,11 @@ def get_frames(image):
             # new_frame.show()
             frames.append(new_frame)
 
-            count += 1
             last_frame = new_frame
             image.seek(image.tell() + 1)
     except EOFError:
         pass
-    return frames, count
+    return frames
 
 
 def main():
@@ -66,21 +64,23 @@ def main():
         image = Image.open(file_name)
 
         # get frames
-        frames, count = get_frames(image)
+        frames = get_frames(image)
 
         char_array = [' ', ':', '-', '?', 'l', 'J',
                       'å', 'k', '9', '8', 'Ä', 'Ü', 'Ö', 'N', 'W', 'M']
         char_matrixes = []
 
-        for i in range(count):
+        # frame to char matrix
+        for frame in frames:
             # convert to gray mode
             frames[i] = frames[i].convert('L')
 
             # resize it
-            frames[i] = frames[i].resize((140, 80))
+            frame = frame.resize((140, 80))
+            # frame.show()
 
             # to char matrix
-            frame_matrix = frames[i].load()
+            frame_matrix = frame.load()
             char_matrix = [[0 for _ in range(80)] for _ in range(140)]
             for j in range(140):
                 for k in range(80):
