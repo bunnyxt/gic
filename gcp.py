@@ -125,7 +125,7 @@ def main():
             for j in range(display_cols):
                 for k in range(display_rows):
                     point = frame_matrix[j, k]
-                    level = int(point / 16)
+                    level = int(point / char_array_size)
                     char_matrix[j][k] = level
             char_matrixes.append(char_matrix)
 
