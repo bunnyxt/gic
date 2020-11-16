@@ -1,6 +1,7 @@
 from PIL import Image
 import sys
 import time
+import argparse
 
 
 def analyseImage(image):
@@ -51,17 +52,25 @@ def get_frames(image):
 
 
 def main():
-    try:
-        # file name
-        file_name = sys.argv[1]
-        #file_name = "test.gif"
-    except Exception as e:
-        print('Usage: python gcp.py <gif-file-name>')
-        exit()
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-v', '--verbose', 
+        action='store_true',
+        help='show verbose log when running',
+    )
+    parser.add_argument(
+        'filename', 
+        type=str, 
+        help='gif filename',
+    )
+    args = parser.parse_args()
 
+    filename = args.filename
+    verbose = args.verbose
+    
     try:
         # load image
-        image = Image.open(file_name)
+        image = Image.open(filename)
 
         # get frames
         frames = get_frames(image)
@@ -73,7 +82,7 @@ def main():
         # frame to char matrix
         for frame in frames:
             # convert to gray mode
-            frames[i] = frames[i].convert('L')
+            frame = frame.convert('L')
 
             # resize it
             frame = frame.resize((140, 80))
@@ -97,7 +106,7 @@ def main():
                     for j in range(140):
                         level = char_matrix[j][i]
                         print(char_array[level], end='')
-                    print("")
+                    print('')
                 time.sleep(0.1)
 
     except Exception as e:
