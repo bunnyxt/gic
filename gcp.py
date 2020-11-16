@@ -63,7 +63,7 @@ def get_char_array(char_array_size):
 
 def main():
     # get terminal window size
-    terminal_rows, terminal_cols = os.popen('stty size', 'r').read().split()
+    terminal_rows, terminal_cols = map(lambda x: int(x), os.popen('stty size', 'r').read().split())
 
     # parse args
     parser = argparse.ArgumentParser()
@@ -79,6 +79,12 @@ def main():
         default=16,
     )
     parser.add_argument(
+        '-r', '--ratio', 
+        type=float,
+        help='char block height / width ratio',
+        default=1.75,
+    )
+    parser.add_argument(
         'filename', 
         type=str, 
         help='gif filename',
@@ -87,17 +93,46 @@ def main():
 
     verbose = args.verbose
     char_array_size = args.size
+    block_ratio = args.ratio
     filename = args.filename
-
-    # display_rows and display_cols
-    display_rows = 80
-    display_cols = 140
     
     try:
         # load image
         image = Image.open(filename)
         if verbose:
             print('file %s loaded' % filename)
+
+        # check format
+        if image.format != 'GIF':
+            if verbose:
+                print('file format is %s' % image.format)
+            raise RuntimeError('input file is %s format, not gif' % image.format)
+        
+        # get image size
+        image_x, image_y = image.size
+        if verbose:
+            print('image size %d * %d' % (image_x, image_y))
+        
+        # calc display_rows and display_cols
+        image_x = int(image_x * block_ratio)  # scratch x
+        # 01 try scale height
+        scale_ratio = 1 if image_y / terminal_rows < 1 else image_y / terminal_rows
+        display_rows = image_y if scale_ratio == 1 else terminal_rows
+        display_cols = int(image_x * scale_ratio)
+        print(display_rows, display_cols)
+        if display_cols > terminal_cols:
+            # 02 try scale width
+            scale_ratio = 1 if image_x / terminal_cols < 1 else image_x / terminal_cols
+            display_cols = image_x if scale_ratio == 1 else terminal_cols
+            display_rows = int(image_y * scale_ratio)
+            print(display_rows, display_cols)
+            if display_rows > terminal_rows:
+                # 03 try scale rows and width
+                scale_ratio =  terminal_rows / display_rows
+                display_rows = int(display_rows * scale_ratio)
+                display_cols = int(display_cols * scale_ratio)
+        if verbose:
+            print('display size %d * %d' % (display_rows, display_cols))
 
         # get frames
         frames = get_frames(image)
