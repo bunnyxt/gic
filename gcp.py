@@ -157,7 +157,7 @@ def main():
         '-r', '--ratio', 
         type=float,
         help='char block height / width ratio',
-        default=1.75,
+        default=2,
     )
     parser.add_argument(
         'filename', 
