@@ -1,4 +1,4 @@
-from PIL import Image
+from PIL import Image, ImageSequence
 import sys
 import time
 import os
@@ -53,7 +53,15 @@ def get_frames(image):
             image.seek(image.tell() + 1)
     except EOFError:
         pass
+
     return frames
+
+
+def get_durations(image):
+    durations = []
+    for frame in ImageSequence.Iterator(image):
+        durations.append(frame.info['duration'])
+    return durations
 
 
 def get_char_array(char_array_size):
@@ -185,6 +193,11 @@ def main():
         frames = get_frames(image)
         if verbose:
             print('%d frames get' % len(frames))
+
+        # get durations
+        durations = get_durations(image)
+        if verbose:
+            print('%d durations get' % len(durations))
         
         # load char array
         char_array = get_char_array(char_array_size)
@@ -233,8 +246,8 @@ def main():
                 # print frame
                 print_frame(char_frame)
 
-                # colddown
-                time.sleep(0.1)
+                # duration
+                time.sleep(durations[index] / 1000)
             
     except Exception as e:
         if verbose:
