@@ -14,7 +14,7 @@
 
 gic - gif in console, play char gif in console via python
 
-## Eequirements
+## Requirements
 
 - `python3`
 - `Pillow==6.1.0`
