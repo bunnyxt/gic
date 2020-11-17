@@ -69,19 +69,19 @@ def get_terminal_window_size():
 def calc_display_size(image_x, image_y, window_x, window_y, block_ratio):
     # expand x
     image_x = int(image_x * block_ratio)
-    print(image_x, image_y)
+    
+    # remove bottom row
+    window_y -= 1
 
     # 01 try scale height
     scale_ratio = 1 if image_y / window_y < 1 else image_y / window_y
     display_rows = image_y if scale_ratio == 1 else window_y
     display_cols = int(image_x * scale_ratio)
-    print(display_cols, display_rows)
     if display_cols > window_x:
         # 02 try scale width
         scale_ratio = 1 if image_x / window_x < 1 else image_x / window_x
         display_cols = image_x if scale_ratio == 1 else window_x
         display_rows = int(image_y / scale_ratio)
-        print(display_cols, display_rows)
         if display_rows > window_y:
             # 03 try scale rows and width
             scale_ratio =  window_y / display_rows
@@ -91,7 +91,7 @@ def calc_display_size(image_x, image_y, window_x, window_y, block_ratio):
     return display_rows, display_cols
 
 
-def calc_char_frames(frames, display_rows, display_cols, char_array, char_array_size):
+def calc_char_frames(frames, display_rows, display_cols, char_array, char_array_size, top_empty_rows):
     char_frames = []
 
     for frame in frames:
@@ -106,6 +106,8 @@ def calc_char_frames(frames, display_rows, display_cols, char_array, char_array_
 
         # pixel to char
         char_frame_rows = []
+        for i in range(top_empty_rows):
+            char_frame_rows.append('')
         for i in range(display_rows):
             char_row = ''
             for j in range(display_cols):
@@ -132,6 +134,12 @@ def main():
         help='show verbose log when running',
     )
     parser.add_argument(
+        '-t', '--top-empty-rows', 
+        action='store_true',
+        help='enable frame top empty rows',
+        default=True,
+    )
+    parser.add_argument(
         '-s', '--size', 
         type=int,
         help='char array size, only support 16 now',
@@ -151,6 +159,7 @@ def main():
     args = parser.parse_args()
 
     verbose = args.verbose
+    enable_top_empty_rows = args.top_empty_rows
     char_array_size = args.size
     block_ratio = args.ratio
     filename = args.filename
@@ -184,6 +193,7 @@ def main():
 
         # display loop
         char_frames = []
+        begin_frame_index = 0
         terminal_rows, terminal_cols = 0, 0
         while True:
             # check now terminal window size
@@ -195,14 +205,35 @@ def main():
                 display_rows, display_cols = calc_display_size(image_x, image_y, terminal_cols, terminal_rows, block_ratio)
                 if verbose:
                     print('display size %d * %d' % (display_cols, display_rows))
+                # calc top empty rows
+                top_empty_rows = 0
+                if enable_top_empty_rows:
+                    top_empty_rows = terminal_rows - display_rows - 1
                 # calc char frames
-                char_frames = calc_char_frames(frames, display_rows, display_cols, char_array, char_array_size)
+                char_frames = calc_char_frames(frames, display_rows, display_cols, char_array, char_array_size, top_empty_rows)
                 if verbose:
                     print('char frames prepared')
 
             # print frames
-            for char_frame in char_frames:
+            for index, char_frame in enumerate(char_frames):
+                if index < begin_frame_index:
+                    # skip frames
+                    continue
+                elif index == begin_frame_index:
+                    # reset begin frame index
+                    begin_frame_index = 0
+                
+                # check now terminal window size
+                terminal_rows_now, terminal_cols_now = get_terminal_window_size()
+                if terminal_rows_now != terminal_rows or terminal_cols_now != terminal_cols:
+                    # need to update char frames, end current gif frame display round immediately
+                    begin_frame_index = index
+                    break
+                
+                # print frame
                 print_frame(char_frame)
+
+                # colddown
                 time.sleep(0.1)
             
     except Exception as e:
