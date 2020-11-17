@@ -1,3 +1,21 @@
+# ------------------------------------------------------------
+#         _      
+#        (_)     
+#    __ _ _  ___ 
+#   / _` | |/ __|
+#  | (_| | | (__ 
+#   \__, |_|\___|
+#    __/ |       
+#   |___/        
+#                        
+# gic - gif in console, play char gif in console via python
+# - requirements: python3, Pillow==6.1.0
+# - basic usage: `python gic.py test.gif`
+# - options: use `python gic.py -h` for help
+# - by bunnyxt, 2020-11-17, license: GPL v3
+# - https://github.com/bunnyxt/gic
+# ------------------------------------------------------------
+
 from PIL import Image, ImageSequence
 import sys
 import time
