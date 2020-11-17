@@ -188,7 +188,7 @@ def main():
         while True:
             # check now terminal window size
             terminal_rows_now, terminal_cols_now = get_terminal_window_size()
-            if terminal_cols_now != terminal_cols or terminal_cols_now != terminal_cols:
+            if terminal_rows_now != terminal_rows or terminal_cols_now != terminal_cols:
                 # update terminal window size
                 terminal_rows, terminal_cols = terminal_rows_now, terminal_cols_now
                 # calc display_rows and display_cols
