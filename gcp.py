@@ -61,10 +61,69 @@ def get_char_array(char_array_size):
         raise RuntimeError('%d size of char array not support' % char_array_size)
     return char_array_dict[char_array_size]
 
-def main():
-    # get terminal window size
-    terminal_rows, terminal_cols = map(lambda x: int(x), os.popen('stty size', 'r').read().split())
 
+def get_terminal_window_size():
+    return map(lambda x: int(x), os.popen('stty size', 'r').read().split())
+
+
+def calc_display_size(image_x, image_y, window_x, window_y, block_ratio):
+    # expand x
+    image_x = int(image_x * block_ratio)
+    print(image_x, image_y)
+
+    # 01 try scale height
+    scale_ratio = 1 if image_y / window_y < 1 else image_y / window_y
+    display_rows = image_y if scale_ratio == 1 else window_y
+    display_cols = int(image_x * scale_ratio)
+    print(display_cols, display_rows)
+    if display_cols > window_x:
+        # 02 try scale width
+        scale_ratio = 1 if image_x / window_x < 1 else image_x / window_x
+        display_cols = image_x if scale_ratio == 1 else window_x
+        display_rows = int(image_y / scale_ratio)
+        print(display_cols, display_rows)
+        if display_rows > window_y:
+            # 03 try scale rows and width
+            scale_ratio =  window_y / display_rows
+            display_rows = int(display_rows * scale_ratio)
+            display_cols = int(display_cols * scale_ratio)
+    
+    return display_rows, display_cols
+
+
+def calc_char_frames(frames, display_rows, display_cols, char_array, char_array_size):
+    char_frames = []
+
+    for frame in frames:
+        # convert to gray mode
+        frame = frame.convert('L')
+
+        # resize frame
+        frame = frame.resize((display_cols, display_rows))
+
+        # load frame pixel matrix
+        frame_pixel_matrix = frame.load()
+
+        # pixel to char
+        char_frame_rows = []
+        for i in range(display_rows):
+            char_row = ''
+            for j in range(display_cols):
+                point = frame_pixel_matrix[j, i]
+                level = int(point / char_array_size)
+                char_row += char_array[level]
+            char_frame_rows.append(char_row)
+        char_frames.append(char_frame_rows)
+    
+    return char_frames
+
+
+def print_frame(char_frame):
+    for char_frame_row in char_frame:
+        print(char_frame_row)
+
+
+def main():
     # parse args
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -113,69 +172,39 @@ def main():
         if verbose:
             print('image size %d * %d' % (image_x, image_y))
         
-        # calc display_rows and display_cols
-        image_x = int(image_x * block_ratio)  # scratch x
-        # 01 try scale height
-        scale_ratio = 1 if image_y / terminal_rows < 1 else image_y / terminal_rows
-        display_rows = image_y if scale_ratio == 1 else terminal_rows
-        display_cols = int(image_x * scale_ratio)
-        print(display_rows, display_cols)
-        if display_cols > terminal_cols:
-            # 02 try scale width
-            scale_ratio = 1 if image_x / terminal_cols < 1 else image_x / terminal_cols
-            display_cols = image_x if scale_ratio == 1 else terminal_cols
-            display_rows = int(image_y * scale_ratio)
-            print(display_rows, display_cols)
-            if display_rows > terminal_rows:
-                # 03 try scale rows and width
-                scale_ratio =  terminal_rows / display_rows
-                display_rows = int(display_rows * scale_ratio)
-                display_cols = int(display_cols * scale_ratio)
-        if verbose:
-            print('display size %d * %d' % (display_rows, display_cols))
-
         # get frames
         frames = get_frames(image)
         if verbose:
             print('%d frames get' % len(frames))
-
+        
         # load char array
         char_array = get_char_array(char_array_size)
         if verbose:
             print('char array with size %d loaded' % char_array_size)
 
-        # frame to char matrix
-        char_matrixes = []
-        for frame in frames:
-            # convert to gray mode
-            frame = frame.convert('L')
-
-            # resize it
-            frame = frame.resize((display_cols, display_rows))
-            # frame.show()
-
-            # to char matrix
-            frame_matrix = frame.load()
-            char_matrix = [[0 for _ in range(display_rows)] for _ in range(display_cols)]
-            for j in range(display_cols):
-                for k in range(display_rows):
-                    point = frame_matrix[j, k]
-                    level = int(point / char_array_size)
-                    char_matrix[j][k] = level
-            char_matrixes.append(char_matrix)
-
-        image.close()
-
         # display loop
+        char_frames = []
+        terminal_rows, terminal_cols = 0, 0
         while True:
-            for char_matrix in char_matrixes:
-                for i in range(display_rows):
-                    for j in range(display_cols):
-                        level = char_matrix[j][i]
-                        print(char_array[level], end='')
-                    print('')
-                time.sleep(0.1)
+            # check now terminal window size
+            terminal_rows_now, terminal_cols_now = get_terminal_window_size()
+            if terminal_cols_now != terminal_cols or terminal_cols_now != terminal_cols:
+                # update terminal window size
+                terminal_rows, terminal_cols = terminal_rows_now, terminal_cols_now
+                # calc display_rows and display_cols
+                display_rows, display_cols = calc_display_size(image_x, image_y, terminal_cols, terminal_rows, block_ratio)
+                if verbose:
+                    print('display size %d * %d' % (display_cols, display_rows))
+                # calc char frames
+                char_frames = calc_char_frames(frames, display_rows, display_cols, char_array, char_array_size)
+                if verbose:
+                    print('char frames prepared')
 
+            # print frames
+            for char_frame in char_frames:
+                print_frame(char_frame)
+                time.sleep(0.1)
+            
     except Exception as e:
         if verbose:
             print(e.with_traceback())
